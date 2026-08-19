@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from database import get_connection
+from api_client import api_delete, api_get
 from config import USE_BACKEND_API
-from api_client import api_get
+from database import get_connection
 
 
 @dataclass
@@ -56,40 +56,90 @@ def _get_reviews_sql(search: str = "", rating: str = "All") -> list[ReviewRow]:
             client=r["client"],
             master=r["master"],
             service=r["service"],
-            rating=r["rating"],
-            date=r["review_date"][:10],
+            rating=int(r["rating"] or 0),
+            date=str(r["review_date"])[:10] if r["review_date"] else "—",
         )
         for r in rows
     ]
 
 
 def _get_reviews_api(search: str = "", rating: str = "All") -> list[ReviewRow]:
-    # NOTE: backend reviews model has rating, comment, created_at,
-    # appointment_id, client_id, master_id — no nested client/master/service
-    # names confirmed yet, so this may need extra lookups or a richer
-    # serializer once we can actually test against the real API.
-    data = api_get("/api/reviews/")
-    results = data.get("results", data if isinstance(data, list) else [])
+    try:
+        data = api_get("/api/reviews/")
+    except Exception as e:
+        print(f"[API Reviews Error]: {e}")
+        return []
+
+    if isinstance(data, dict):
+        results = data.get("results", [])
+    elif isinstance(data, list):
+        results = data
+    else:
+        results = []
 
     rows = []
     for item in results:
-        client = item.get("client_name", "")
-        master = item.get("master_name", "")
-        service = item.get("service_name", "")
-        review_rating = item.get("rating", 0)
-        date = (item.get("created_at") or "")[:10]
+        if not isinstance(item, dict):
+            continue
 
+        review_id = item.get("id", "N/A")
+
+        # Парсинг імені клієнта (вкладений dict або строка)
+        client_data = item.get("client") or item.get("user") or item.get("author")
+        if isinstance(client_data, dict):
+            first = client_data.get("first_name", "")
+            last = client_data.get("last_name", "")
+            client = f"{first} {last}".strip() or client_data.get("email") or "N/A"
+        else:
+            client = item.get("client_name") or (str(client_data) if client_data else "N/A")
+
+        # Парсинг імені майстра
+        master_data = item.get("master")
+        if isinstance(master_data, dict):
+            first = master_data.get("first_name", "")
+            last = master_data.get("last_name", "")
+            master = f"{first} {last}".strip() or master_data.get("email") or "N/A"
+        else:
+            master = item.get("master_name") or (str(master_data) if master_data else "N/A")
+
+        # Парсинг назви послуги
+        appointment_data = item.get("appointment") or item.get("booking")
+        if isinstance(appointment_data, dict):
+            service_obj = appointment_data.get("service") or appointment_data.get("service_name")
+            if isinstance(service_obj, dict):
+                service = service_obj.get("name") or service_obj.get("service_name") or "N/A"
+            else:
+                service = str(service_obj) if service_obj else "N/A"
+        else:
+            service = item.get("service_name") or item.get("service") or "N/A"
+
+        # Оцінка
+        try:
+            review_rating = int(item.get("rating") or item.get("stars") or 0)
+        except (ValueError, TypeError):
+            review_rating = 0
+
+        # Дата
+        date_raw = item.get("created_at") or item.get("review_date") or item.get("date")
+        date = str(date_raw)[:10] if date_raw else "—"
+
+        # Фільтрація
         if search and search.lower() not in f"{client} {master} {service}".lower():
             continue
-        if rating != "All" and str(review_rating) != rating:
-            continue
+
+        if rating != "All":
+            try:
+                if review_rating != int(rating):
+                    continue
+            except (ValueError, TypeError):
+                continue
 
         rows.append(
             ReviewRow(
-                id=item.get("id"),
+                id=review_id,
                 client=client,
                 master=master,
-                service=service,
+                service=str(service),
                 rating=review_rating,
                 date=date,
             )
@@ -113,16 +163,14 @@ def _delete_review_sql(review_id: int) -> None:
 
 
 def _delete_review_api(review_id) -> None:
-    # NOTE: no DELETE /api/reviews/{id}/ confirmed in the schema yet —
-    # this will raise until backend adds it.
-    raise NotImplementedError(
-        "Deleting a review via the API isn't supported yet — "
-        "ask backend for a DELETE /api/reviews/{id}/ endpoint."
-    )
+    try:
+        api_delete(f"/api/reviews/{review_id}/")
+    except Exception as e:
+        print(f"[API Delete Review Error]: {e}")
 
 
 def delete_review(review_id) -> None:
     if USE_BACKEND_API:
         _delete_review_api(review_id)
     else:
-        _delete_review_sql(review_id)
+        _delete_review_sql(int(review_id))

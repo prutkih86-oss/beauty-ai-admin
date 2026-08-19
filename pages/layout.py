@@ -4,16 +4,17 @@ NAV_ITEMS = [
     ("Dashboard", "/dashboard", "dashboard"),
     ("Analytics", "/analytics", "insights"),
 
-    None,  # ← розділювач
+    None,
 
     ("Masters", "/masters", "badge"),
+    ("Salons", "/salons", "store"),
     ("Clients", "/clients", "groups"),
     ("Bookings", "/bookings", "event"),
     ("Services", "/services", "content_cut"),
     ("Payments", "/payments", "payments"),
     ("Reviews", "/reviews", "star"),
 
-    None,  # ← ще один розділювач
+    None,
 
     ("AI", "/ai", "auto_awesome"),
     ("Settings", "/settings", "settings"),

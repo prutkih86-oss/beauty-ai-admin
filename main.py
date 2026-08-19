@@ -1,73 +1,71 @@
 from nicegui import ui
 
-ui.add_head_html("""
+# CSS стилі для приведення Quasar Table до мінімалістичного дизайну
+ui.add_head_html(
+    """
 <style>
-
+/* Скидання рамок та тіней контейнера */
 .q-table,
 .q-table__container {
     border: none !important;
     box-shadow: none !important;
 }
 
+/* Стилізація заголовків таблиці */
 .q-table thead tr th {
     background: #fafafa;
     border-bottom: 1px solid #e5e7eb;
     font-weight: 600;
 }
 
+/* Оформлення рядків та ховер-ефект */
+.q-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
 .q-table tbody tr:hover {
     background: #f8fafc;
+}
+
+.q-table tbody tr td {
+    border-bottom: 1px solid #f1f5f9;
+    white-space: nowrap;
 }
 
 .q-table tbody tr:last-child td {
     border-bottom: none;
 }
-.q-table thead tr th{
-    background:#fafafa;
-    border-bottom:1px solid #e5e7eb;
-    font-weight:600;
-}
 
-.q-table tbody tr:hover{
-    background:#f8fafc;
-    transition:.15s;
-}
-
-.q-table tbody tr td{
-    border-bottom:1px solid #f1f5f9;
-}
-
-.q-table tbody tr:last-child td{
-    border-bottom:none;
-}
+/* Налаштування ширини та поведінки скролу */
 .q-table table {
     table-layout: auto !important;
     width: 100% !important;
 }
-.q-table__middle{
-    overflow-x:hidden!important;
-}
-.q-table th,
-.q-table td {
-    white-space: nowrap;
+
+.q-table {
+    min-width: 100% !important;
 }
 
-</style>.q-table__middle{overflow-x:hidden!important;}
-.q-table__container{overflow-x:hidden!important;}
-.q-table{min-width:100%!important;}
-
-""", shared=True)
+.q-table__container,
+.q-table__middle {
+    overflow-x: auto !important; /* Авто-скрол замість hidden, щоб таблиці не обрізалися на малих екранах */
+}
+</style>
+""",
+    shared=True,
+)
 
 from pages import (
-    masters,
-    clients,
+    ai,
+    analytics,
     bookings,
+    clients,
     dashboard,
-    services,
+    masters,
+    salons,
     payments,
     reviews,
-    analytics,
-    ai,
+    services,
     settings,
 )
 

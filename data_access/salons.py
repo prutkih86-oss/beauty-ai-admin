@@ -23,6 +23,7 @@ def _get_salons_sql(search: str = "") -> list[SalonRow]:
         FROM salons
         WHERE 1=1
     """
+
     params: list = []
 
     if search:
@@ -48,19 +49,32 @@ def _get_salons_sql(search: str = "") -> list[SalonRow]:
 
 
 def _get_salons_api(search: str = "") -> list[SalonRow]:
-    # NOTE: verify the real query param name for search once we have API
-    # access (schema didn't show one explicitly for /api/salons/ — may need
-    # to filter client-side like we do for masters, same as here for now).
     data = api_get("/api/salons/")
-    results = data.get("results", data if isinstance(data, list) else [])
+
+    if isinstance(data, dict):
+        results = data.get("results", [])
+    elif isinstance(data, list):
+        results = data
+    else:
+        results = []
 
     rows = []
+
     for item in results:
+        if not isinstance(item, dict):
+            continue
+
         name = item.get("name", "")
         city = item.get("city", "")
 
-        if search and search.lower() not in name.lower() and search.lower() not in city.lower():
-            continue
+        if search:
+            search_lower = search.lower()
+
+            if (
+                search_lower not in name.lower()
+                and search_lower not in city.lower()
+            ):
+                continue
 
         rows.append(
             SalonRow(
@@ -68,7 +82,7 @@ def _get_salons_api(search: str = "") -> list[SalonRow]:
                 name=name,
                 city=city,
                 address=item.get("address", ""),
-                popularity_score=0,  # not part of the backend salon model
+                popularity_score=0,
             )
         )
 
@@ -78,59 +92,117 @@ def _get_salons_api(search: str = "") -> list[SalonRow]:
 def get_salons(search: str = "") -> list[SalonRow]:
     if USE_BACKEND_API:
         return _get_salons_api(search)
+
     return _get_salons_sql(search)
 
 
-def _add_salon_sql(name: str, city: str, address: str) -> None:
+def _add_salon_sql(
+    name: str,
+    city: str,
+    address: str
+) -> None:
+
     conn = get_connection()
     cursor = conn.cursor()
+
     cursor.execute(
         """
-        INSERT INTO salons (salon_name, city, address, opened_date, popularity_score)
+        INSERT INTO salons (
+            salon_name,
+            city,
+            address,
+            opened_date,
+            popularity_score
+        )
         VALUES (?, ?, ?, DATE('now'), ?)
         """,
-        (name.strip(), city.strip() or None, address.strip() or None, 4.0),
+        (
+            name.strip(),
+            city.strip() or None,
+            address.strip() or None,
+            4.0,
+        ),
     )
+
     conn.commit()
     conn.close()
 
 
-def _add_salon_api(name: str, city: str, address: str) -> None:
-    # NOTE: the backend Salon model requires more fields than we collect in
-    # our simple form (phone, latitude/longitude, logo, available_status,
-    # salon_status are all present in their schema). Sending only
-    # name/city/address will likely fail validation until we either extend
-    # the form or confirm which of those fields are actually required vs
-    # optional on their side.
+def _add_salon_api(
+    name: str,
+    city: str,
+    address: str
+) -> None:
+
     api_post(
         "/api/salons/",
-        {"name": name.strip(), "city": city.strip(), "address": address.strip()},
+        {
+            "name": name.strip(),
+            "city": city.strip(),
+            "address": address.strip(),
+        },
     )
 
 
-def add_salon(name: str, city: str, address: str) -> None:
+def add_salon(
+    name: str,
+    city: str,
+    address: str
+) -> None:
+
     if USE_BACKEND_API:
         _add_salon_api(name, city, address)
     else:
         _add_salon_sql(name, city, address)
 
 
-def _update_salon_sql(salon_id: int, city: str, address: str) -> None:
+def _update_salon_sql(
+    salon_id: int,
+    city: str,
+    address: str
+) -> None:
+
     conn = get_connection()
     cursor = conn.cursor()
+
     cursor.execute(
-        "UPDATE salons SET city = ?, address = ? WHERE salon_id = ?",
-        (city.strip() or None, address.strip() or None, salon_id),
+        """
+        UPDATE salons
+        SET city = ?, address = ?
+        WHERE salon_id = ?
+        """,
+        (
+            city.strip() or None,
+            address.strip() or None,
+            salon_id,
+        ),
     )
+
     conn.commit()
     conn.close()
 
 
-def _update_salon_api(salon_id, city: str, address: str) -> None:
-    api_put(f"/api/salons/{salon_id}/", {"city": city.strip(), "address": address.strip()})
+def _update_salon_api(
+    salon_id,
+    city: str,
+    address: str
+) -> None:
+
+    api_put(
+        f"/api/salons/{salon_id}/",
+        {
+            "city": city.strip(),
+            "address": address.strip(),
+        },
+    )
 
 
-def update_salon(salon_id, city: str, address: str) -> None:
+def update_salon(
+    salon_id,
+    city: str,
+    address: str
+) -> None:
+
     if USE_BACKEND_API:
         _update_salon_api(salon_id, city, address)
     else:
@@ -140,13 +212,20 @@ def update_salon(salon_id, city: str, address: str) -> None:
 def _delete_salon_sql(salon_id: int) -> None:
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM salons WHERE salon_id = ?", (salon_id,))
+
+    cursor.execute(
+        "DELETE FROM salons WHERE salon_id = ?",
+        (salon_id,),
+    )
+
     conn.commit()
     conn.close()
 
 
 def _delete_salon_api(salon_id) -> None:
-    api_delete(f"/api/salons/{salon_id}/")
+    api_delete(
+        f"/api/salons/{salon_id}/"
+    )
 
 
 def delete_salon(salon_id) -> None:

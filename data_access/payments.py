@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from database import get_connection
+from api_client import api_delete, api_get, api_post
 from config import USE_BACKEND_API
-from api_client import api_get, api_post, api_delete
+from database import get_connection
 
 
 @dataclass
@@ -15,7 +15,9 @@ class PaymentRow:
     date: str
 
 
-def _get_payments_sql(search: str = "", method: str = "All", date: str = "") -> list[PaymentRow]:
+def _get_payments_sql(
+    search: str = "", method: str = "All", date: str = ""
+) -> list[PaymentRow]:
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -57,43 +59,84 @@ def _get_payments_sql(search: str = "", method: str = "All", date: str = "") -> 
             id=r["id"],
             client=r["client"],
             booking_id=r["booking_id"],
-            amount=r["amount"],
+            amount=float(r["amount"] or 0.0),
             method=r["method"],
-            date=r["payment_date"][:10],
+            date=str(r["payment_date"])[:10] if r["payment_date"] else "—",
         )
         for r in rows
     ]
 
 
-def _get_payments_api(search: str = "", method: str = "All", date: str = "") -> list[PaymentRow]:
-    # NOTE: /api/payments/ response shape not yet confirmed against real
-    # data (no auth to test with yet). Payment model has amount, currency,
-    # payment_method, payment_status, payment_date, appointment_id — but no
-    # client name directly, so we may need a nested client/appointment
-    # object in the response, or a second lookup. Adjust field access below
-    # once we see a real response.
-    data = api_get("/api/payments/")
-    results = data.get("results", data if isinstance(data, list) else [])
+def _get_payments_api(
+    search: str = "", method: str = "All", date: str = ""
+) -> list[PaymentRow]:
+    try:
+        data = api_get("/api/payments/")
+    except Exception as e:
+        print(f"[API Payments Error]: {e}")
+        return []
+
+    if isinstance(data, dict):
+        results = data.get("results", [])
+    elif isinstance(data, list):
+        results = data
+    else:
+        results = []
 
     rows = []
     for item in results:
-        client = item.get("client_name") or item.get("client", "")
-        payment_date = (item.get("payment_date") or "")[:10]
+        if not isinstance(item, dict):
+            continue
 
-        if search and search.lower() not in str(client).lower() and search not in str(item.get("appointment_id", "")):
+        payment_id = item.get("id", "N/A")
+
+        # Обробка appointment (може бути dict або int/str)
+        appointment = item.get("appointment") or item.get("appointment_id")
+        if isinstance(appointment, dict):
+            booking_id = appointment.get("id", "N/A")
+            client = (
+                appointment.get("client_name")
+                or appointment.get("client")
+                or item.get("client_name")
+                or "N/A"
+            )
+        else:
+            booking_id = appointment or "N/A"
+            client = item.get("client_name") or item.get("client") or "N/A"
+
+        # Дата платежу
+        payment_date_raw = item.get("payment_date") or item.get("created_at") or item.get("date")
+        payment_date = str(payment_date_raw)[:10] if payment_date_raw else "—"
+
+        # Спосіб оплати та сума
+        pay_method = str(item.get("payment_method") or item.get("method") or "Cash")
+        try:
+            amount = float(item.get("amount") or 0.0)
+        except (ValueError, TypeError):
+            amount = 0.0
+
+        # Фільтрація
+        if (
+            search
+            and search.lower() not in str(client).lower()
+            and search not in str(booking_id)
+            and search not in str(payment_id)
+        ):
             continue
-        if method != "All" and item.get("payment_method") != method:
+
+        if method != "All" and pay_method.lower() != method.lower():
             continue
+
         if date and payment_date != date:
             continue
 
         rows.append(
             PaymentRow(
-                id=item.get("id"),
-                client=client,
-                booking_id=item.get("appointment_id") or item.get("appointment"),
-                amount=float(item.get("amount", 0)),
-                method=item.get("payment_method", ""),
+                id=payment_id,
+                client=str(client),
+                booking_id=booking_id,
+                amount=amount,
+                method=pay_method,
                 date=payment_date,
             )
         )
@@ -122,20 +165,29 @@ def _add_payment_sql(booking_id: int, amount: float, method: str) -> None:
 
 
 def _add_payment_api(booking_id, amount: float, method: str) -> None:
-    # NOTE: backend field is "appointment_id", and payment_status/currency
-    # are also on the model — sending only these three may fail validation
-    # until we confirm which fields are required vs have defaults.
-    api_post(
-        "/api/payments/",
-        {"appointment_id": booking_id, "amount": amount, "payment_method": method},
-    )
+    try:
+        b_id = int(booking_id) if str(booking_id).isdigit() else booking_id
+    except (ValueError, TypeError):
+        b_id = booking_id
+
+    payload = {
+        "appointment": b_id,
+        "amount": float(amount),
+        "payment_method": method,
+        "payment_status": "COMPLETED",
+        "currency": "UAH",
+    }
+    try:
+        api_post("/api/payments/", payload)
+    except Exception as e:
+        print(f"[API Add Payment Error]: {e}")
 
 
 def add_payment(booking_id, amount: float, method: str) -> None:
     if USE_BACKEND_API:
         _add_payment_api(booking_id, amount, method)
     else:
-        _add_payment_sql(booking_id, amount, method)
+        _add_payment_sql(int(booking_id), float(amount), method)
 
 
 def _delete_payment_sql(payment_id: int) -> None:
@@ -147,11 +199,14 @@ def _delete_payment_sql(payment_id: int) -> None:
 
 
 def _delete_payment_api(payment_id) -> None:
-    api_delete(f"/api/payments/{payment_id}/")
+    try:
+        api_delete(f"/api/payments/{payment_id}/")
+    except Exception as e:
+        print(f"[API Delete Payment Error]: {e}")
 
 
 def delete_payment(payment_id) -> None:
     if USE_BACKEND_API:
         _delete_payment_api(payment_id)
     else:
-        _delete_payment_sql(payment_id)
+        _delete_payment_sql(int(payment_id))

@@ -1,8 +1,7 @@
 from dataclasses import dataclass
-
-from database import get_connection
-from config import USE_BACKEND_API
 from api_client import api_get, api_post
+from config import USE_BACKEND_API
+from database import get_connection
 
 
 @dataclass
@@ -64,35 +63,66 @@ def _get_masters_sql(search: str = "", category: str = "All") -> list[MasterRow]
 
 
 def _get_masters_api(search: str = "", category: str = "All") -> list[MasterRow]:
-    # NOTE: /api/users/masters currently has no search/category filter or
-    # rating/bookings/revenue fields in its response (see MasterList schema:
-    # id, first_name, last_name, photo, average_rating, years_of_experience,
-    # salons[], services[]). Filtering by name/category is done client-side
-    # here until the backend adds real query params. Revenue and per-master
-    # bookings count aren't available from this endpoint at all yet.
-    data = api_get("/api/users/masters")
-    results = data.get("results", data if isinstance(data, list) else [])
+    try:
+        # Відправляємо запит до підтвердженого ендпоінту
+        data = api_get("/api/users/masters/")
+    except Exception as e:
+        print(f"[API Masters Error]: {e}")
+        return []
+
+    if isinstance(data, dict):
+        results = data.get("results", [])
+    elif isinstance(data, list):
+        results = data
+    else:
+        results = []
 
     rows = []
     for item in results:
-        name = f"{item.get('first_name', '')} {item.get('last_name', '')}".strip()
-        specialization = item.get("specialization", "")  # not in current API response
-        city = item.get("salons", [{}])[0].get("city", "") if item.get("salons") else ""
+        if not isinstance(item, dict):
+            continue
 
+        first_name = item.get("first_name") or ""
+        last_name = item.get("last_name") or ""
+        name = f"{first_name} {last_name}".strip() or item.get("email") or "Unknown Master"
+
+        # Визначаємо спеціалізацію: з прямого поля або беремо категорію першої послуги
+        specialization = item.get("specialization") or ""
+        if not specialization and item.get("services"):
+            services = item.get("services", [])
+            if services and isinstance(services[0], dict):
+                specialization = services[0].get("category") or services[0].get("name") or "General"
+
+        if not specialization:
+            specialization = "General"
+
+        # Отримання міста із салонів
+        salons = item.get("salons", [])
+        city = "N/A"
+        if salons and isinstance(salons, list) and isinstance(salons[0], dict):
+            city = salons[0].get("city") or salons[0].get("address") or "N/A"
+
+        # Оцінка
+        try:
+            rating = float(item.get("average_rating") or item.get("rating") or 0.0)
+        except (ValueError, TypeError):
+            rating = 0.0
+
+        # Фільтрація клієнтською частиною
         if search and search.lower() not in name.lower():
             continue
-        if category != "All" and specialization != category:
+        if category != "All" and category.lower() not in specialization.lower():
             continue
 
         rows.append(
             MasterRow(
                 name=name,
                 specialization=specialization,
-                rating=item.get("average_rating") or 0,
+                rating=rating,
                 city=city,
-                bookings=0,   # not available from this endpoint yet
-                revenue=0,    # not available from this endpoint yet
-                is_solo=not bool(item.get("salons")),
+                bookings=int(item.get("bookings_count") or 0),
+                revenue=float(item.get("total_revenue") or 0.0),
+                is_solo=not bool(salons),
             )
         )
 
@@ -120,14 +150,23 @@ def _add_master_sql(name: str, specialization: str, city: str, address: str, is_
 
 
 def _add_master_api(name: str, specialization: str, city: str, address: str, is_solo: bool) -> None:
-    # NOTE: there is currently no POST endpoint to create a master directly.
-    # Backend confirmed (as of this writing) master creation only happens
-    # via Django admin or direct DB access. This will raise until that
-    # endpoint exists.
-    raise NotImplementedError(
-        "Creating a master via the API isn't supported yet — "
-        "ask backend for a POST /api/users/masters/ endpoint."
-    )
+    parts = name.strip().split(" ", 1)
+    first_name = parts[0]
+    last_name = parts[1] if len(parts) > 1 else ""
+
+    payload = {
+        "first_name": first_name,
+        "last_name": last_name,
+        "specialization": specialization,
+        "city": city,
+        "address": address,
+        "is_solo": is_solo,
+    }
+
+    try:
+        api_post("/api/users/masters/", payload)
+    except Exception as e:
+        print(f"[API Add Master Error]: {e}")
 
 
 def add_master(name: str, specialization: str, city: str, address: str, is_solo: bool) -> None:
