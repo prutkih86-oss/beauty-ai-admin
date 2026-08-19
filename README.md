@@ -20,6 +20,18 @@ Administrators can work with:
 * analytics;
 * platform settings;
 * AI-related functionality.
+  
+  ## Preview
+
+### Dashboard
+
+<img src="docs/admin-dashboard.jpg" width="100%" alt="Beauty AI Admin Dashboard">
+
+### Analytics
+
+<img src="docs/admin-analytics.jpg" width="100%" alt="Beauty AI Admin Analytics">
+
+> UI preview shown with sample data.
 
 ## My Contribution
 
