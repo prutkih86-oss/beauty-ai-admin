@@ -28,7 +28,9 @@ jobs:
       with:
         context: .
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DockerImageName }}:1.0.${{ github.run_number }}
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DockerImageName }}:1.0.${{ github.run_number }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DockerImageName }}:latest
 
   nodejs-deploy:
       name: Deploy to Azure VM
