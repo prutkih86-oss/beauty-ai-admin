@@ -34,7 +34,6 @@ jobs:
       name: Deploy to Azure VM
       runs-on: ubuntu-latest
       needs: nodejs-build  
-      environment: development
       steps:
       - name: Azure login
         uses: azure/login@v3
@@ -56,4 +55,6 @@ jobs:
             --name TestingVM \
             --command-id RunShellScript \
             --scripts "docker run -d -p 8080:8080 --name ${{env.container-name}} \
+              -e VERIFY_SSL=${{ env.VERIFY_SSL }} -e API_EMAIL=${{ secrets.API_EMAIL }} \
+              -e API_PASSWORD=${{ secrets.API_PASSWORD }} -e USE_BACKEND_API=${{ env.USE_BACKEND_API }} \  
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DockerImageName }}:1.0.${{ github.run_number }}"
