@@ -56,5 +56,5 @@ jobs:
             --command-id RunShellScript \
             --scripts "docker run -d -p 8080:8080 --name ${{env.container-name}} \
               -e VERIFY_SSL=${{ vars.VERIFY_SSL }} -e API_EMAIL=${{ secrets.API_EMAIL }} \
-              -e API_PASSWORD=${{ secrets.API_PASSWORD }} -e USE_BACKEND_API=${{ vars.USE_BACKEND_API }} \  
+              -e API_PASSWORD=${{ secrets.API_PASSWORD }} -e USE_BACKEND_API=${{ vars.USE_BACKEND_API }} \
               ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DockerImageName }}:1.0.${{ github.run_number }}"
