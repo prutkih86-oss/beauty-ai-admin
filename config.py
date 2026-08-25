@@ -6,7 +6,7 @@ load_dotenv()
 
 # Backend API base URL (без '/api' на кінці, щоб уникнути дублювання /api/api/)
 API_BASE_URL = os.environ.get(
-    "API_BASE_URL", "http://localhost:8000"
+    "API_BASE_URL", "https://beautyaiservice.polandcentral.cloudapp.azure.com"
 )
 
 # Admin/staff account credentials for JWT auth (POST /api/users/token/)
