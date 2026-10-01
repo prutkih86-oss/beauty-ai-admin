@@ -1,6 +1,6 @@
 # Beauty AI Admin Panel
 
-Admin panel for **Beauty AI** — a beauty services booking platform with management tools, analytics, bookings, clients, masters, salons, payments and services.
+Admin panel for **BeautyAI** — a beauty services booking platform with management tools, analytics, bookings, clients, masters, salons, payments and services.
 
 ## Overview
 
