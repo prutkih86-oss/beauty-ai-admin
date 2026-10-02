@@ -30,7 +30,7 @@ Administrators can manage and review:
 
 ### Analytics — Revenue Trend
 
-<img src="docs/admin-analytics.jpg" width="100%" alt="Beauty AI Admin Revenue Trend">
+<img src="docs/admin-analytics1.jpg" width="100%" alt="Beauty AI Admin Revenue Trend">
 
 ### Analytics — Overview
 
