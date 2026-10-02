@@ -1,35 +1,44 @@
 # Beauty AI Admin Panel
 
-Admin panel for **BeautyAI** — a beauty services booking platform with management tools, analytics, bookings, clients, masters, salons, payments and services.
+Admin panel for **Beauty AI** — a beauty services booking platform with operational management, analytics, bookings, clients, masters, salons, payments, reviews, services, and platform settings.
 
 ## Overview
 
-Beauty AI Admin is an internal management application designed to support the administration and analytics of the Beauty AI platform.
+Beauty AI Admin is an internal management application designed to support administration and analytics across the Beauty AI platform.
 
-The panel provides a centralized interface for managing operational data and monitoring platform activity.
+The panel provides a centralized interface for monitoring platform activity and working with operational data.
 
-Administrators can work with:
+Administrators can manage and review:
 
-* bookings;
-* clients;
-* masters;
-* salons;
-* services;
-* payments;
-* reviews;
-* analytics;
-* platform settings;
-* AI-related functionality.
-  
-  ## Preview
+- bookings;
+- clients;
+- masters;
+- salons;
+- services;
+- promotions;
+- payments;
+- reviews;
+- analytics;
+- platform settings;
+- AI-related functionality.
+
+## Preview
 
 ### Dashboard
 
 <img src="docs/admin-dashboard.jpg" width="100%" alt="Beauty AI Admin Dashboard">
 
-### Analytics
+### Analytics — Revenue Trend
 
-<img src="docs/admin-analytics.jpg" width="100%" alt="Beauty AI Admin Analytics">
+<img src="docs/admin-analytics-revenue-trend.jpg" width="100%" alt="Beauty AI Admin Revenue Trend">
+
+### Analytics — Overview
+
+<img src="docs/admin-analytics-overview.jpg" width="100%" alt="Beauty AI Admin Analytics Overview">
+
+### Analytics — Client & Booking Insights
+
+<img src="docs/admin-analytics-behavior.jpg" width="100%" alt="Beauty AI Admin Client and Booking Insights">
 
 > UI preview shown with sample data.
 
@@ -39,56 +48,88 @@ I developed the admin panel as part of the Beauty AI team project.
 
 My contribution includes:
 
-* developing the admin interface;
-* implementing dashboard and analytics pages;
-* creating reusable Python/NiceGUI components;
-* implementing data access modules;
-* connecting the interface with backend/API data;
-* working with booking, client, master, salon, service and payment data;
-* implementing administrative functionality and navigation;
-* structuring the application into separate pages and data-access layers.
+- developing the admin interface;
+- implementing dashboard and analytics pages;
+- creating reusable Python/NiceGUI components;
+- implementing data access modules;
+- connecting the interface with backend/API data;
+- working with booking, client, master, salon, service, payment, review, promotion, and analytics data;
+- implementing administrative functionality and navigation;
+- organizing the application into separate pages and data-access layers;
+- maintaining and updating the admin-side project structure.
 
 ## Tech Stack
 
-* **Python**
-* **NiceGUI**
-* **REST API**
-* **SQLite / database integration**
-* **HTML / CSS**
-* **Git / GitHub**
+- **Python**
+- **NiceGUI**
+- **REST API**
+- **SQLite / database integration**
+- **HTML / CSS**
+- **Git / GitHub**
 
 ## Main Features
 
 ### Dashboard
 
-Provides an overview of the platform's key operational metrics and activity.
+Provides an overview of key platform activity and operational metrics.
+
+The dashboard includes information such as:
+
+- booking value;
+- total bookings;
+- new clients;
+- active masters;
+- bookings today;
+- completed bookings;
+- cancelled bookings;
+- no-show bookings;
+- recent bookings;
+- today's schedule.
 
 ### Analytics
 
-The analytics section provides insights into:
+The analytics section provides insights into platform performance and user activity.
 
-* revenue;
-* bookings;
-* payment methods;
-* booking statuses;
-* customer activity;
-* platform performance.
+It includes:
+
+- booking value;
+- average booking value;
+- cancellation rate;
+- no-show rate;
+- repeat clients;
+- revenue trends;
+- payment methods;
+- revenue by week;
+- booking statuses;
+- most popular services;
+- revenue by city;
+- new vs returning clients;
+- peak booking hours;
+- bookings by weekday.
 
 ### Bookings Management
 
-Administrators can view and manage booking information, including booking statuses and related customer/service data.
+Administrators can view and work with booking information, including booking status, client details, master information, service data, and appointment time.
 
 ### Clients Management
 
 Provides access to client information and customer-related platform data.
 
-### Masters & Salons
+### Masters Management
 
-The panel includes management interfaces for beauty masters and partner salons.
+Allows administrators to work with beauty master information and related platform data.
 
-### Services
+### Salons Management
 
-Administrators can view and manage available beauty services and related information.
+Provides management interfaces for partner salons and salon-related information.
+
+### Services Management
+
+Administrators can view and manage available beauty services and related data.
+
+### Promotions
+
+The admin panel includes functionality for working with promotional offers and platform promotions.
 
 ### Payments
 
@@ -97,6 +138,10 @@ Provides access to payment-related information and transaction data.
 ### Reviews
 
 Allows administrators to monitor customer reviews and feedback.
+
+### AI
+
+The panel includes an AI-related section for Beauty AI platform functionality.
 
 ### Settings
 
