@@ -38,7 +38,7 @@ Administrators can manage and review:
 
 ### Analytics — Client & Booking Insights
 
-<img src="docs/admin-analytics-behavior.jpg" width="100%" alt="Beauty AI Admin Client and Booking Insights">
+<img src="docs/admin-analytics-behavior1.jpg" width="100%" alt="Beauty AI Admin Client and Booking Insights">
 
 > UI preview shown with sample data.
 
