@@ -26,7 +26,7 @@ Administrators can manage and review:
 
 ### Dashboard
 
-<img src="docs/admin-dashboard.jpg" width="100%" alt="Beauty AI Admin Dashboard">
+<img src="docs/admin-dashboard1.jpg" width="100%" alt="Beauty AI Admin Dashboard">
 
 ### Analytics — Revenue Trend
 
