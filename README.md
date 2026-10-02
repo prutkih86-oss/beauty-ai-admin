@@ -185,16 +185,20 @@ beauty-ai-admin/
 
 The application is organized into separate layers:
 
-**Pages**
+### Pages
+
 User-facing admin interfaces and application views.
 
-**Data Access**
+### Data Access
+
 Modules responsible for retrieving and working with platform data.
 
-**API Client**
+### API Client
+
 Handles communication with backend services.
 
-**Database**
+### Database
+
 Database-related configuration and integration.
 
 This structure makes the application easier to maintain and extend as the platform grows.
@@ -251,7 +255,7 @@ python main.py
 
 **Team Project — Beauty AI Platform**
 
-The admin panel is part of the Beauty AI platform, which combines beauty-service booking, AI-powered recommendations, administrative management and analytics.
+The admin panel is part of the Beauty AI platform, which combines beauty-service booking, AI-powered recommendations, administrative management, and analytics.
 
 ## Repository
 
